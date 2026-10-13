@@ -29,6 +29,7 @@ interface Props {
   aoRemover: (id: string) => void;
   aoIrParaEscola: () => void;
   aoIrParaMaterias: () => void;
+  aoSimular: () => void;
 }
 
 // 6.5 — Avaliações dentro da matéria.
@@ -83,6 +84,7 @@ function AvaliacoesDaMateria({
   aoAdicionar,
   aoEditar,
   aoRemover,
+  aoSimular,
 }: Props & { config: ConfigEscola; materia: Materia }) {
   // "nova" = formulário de nova avaliação aberto; um id = editando aquela avaliação.
   const [formulario, setFormulario] = useState<"nova" | string | null>(null);
@@ -104,6 +106,12 @@ function AvaliacoesDaMateria({
       </Botao>
 
       <Resumo analise={analise} />
+
+      {daMateria.some((a) => a.status === "pendente") && (
+        <Botao variante="secundario" onClick={aoSimular}>
+          🔮 Simular notas
+        </Botao>
+      )}
 
       {aviso && (
         <p role="status" className="rounded-xl bg-olho/15 px-4 py-3 text-sm text-olho">
