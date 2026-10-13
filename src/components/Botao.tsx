@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type Variante = "primario" | "secundario";
+type Variante = "primario" | "secundario" | "perigo";
 
 interface BotaoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variante?: Variante;
@@ -9,6 +9,7 @@ interface BotaoProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const estilos: Record<Variante, string> = {
   primario: "bg-destaque text-fundo active:brightness-90",
   secundario: "border border-borda bg-card text-texto active:bg-borda",
+  perigo: "bg-reagir text-fundo active:brightness-90",
 };
 
 // Botão com altura mínima de 48px (alvo de toque confortável no celular/tablet).

@@ -4,3 +4,5 @@ export * from "./validacao";
 export * from "./calculo";
 export * from "./classificacao";
 export * from "./simulador";
+export * from "./periodos";
+export * from "./materias";
