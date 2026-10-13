@@ -70,6 +70,8 @@ export function analisarMateria(materia: Materia, avaliacoes: Avaliacao[], confi
     else if (r.metaAtingida) motivo = `Você já tem ${f(r.obtidos)} pontos e sua meta é ${f(meta)}.`;
     else if (r.disponiveis === 0)
       motivo = `Você tem ${f(r.obtidos)} de ${f(meta)} pontos e não há avaliações pendentes cadastradas.`;
+    else if (!r.possivel)
+      motivo = `Faltam ${f(r.falta)} pontos para a meta, mas só ${f(r.disponiveis)} ainda estão disponíveis.`;
     else motivo = `Você precisa de ${f(r.falta)} dos ${f(r.disponiveis)} pontos que ainda estão disponíveis.`;
 
     return { ...diagnostico, motivo, modo: "pontos", meta, ...r };
@@ -90,6 +92,8 @@ export function analisarMateria(materia: Materia, avaliacoes: Avaliacao[], confi
   else if (r.notaNecessaria === null)
     motivo = `Sua média é ${f(r.mediaAtual ?? 0)}, sua meta é ${f(meta)} e não há avaliações pendentes cadastradas.`;
   else if (r.metaGarantida) motivo = `Mesmo tirando 0 nas pendentes, sua média fica em ${f(meta)} ou mais.`;
+  else if (!r.alcancavel)
+    motivo = `Você precisaria tirar ${f(r.notaNecessaria)} nas pendentes para chegar na média ${f(meta)}, mas a nota máxima é ${f(notaMaxima)}.`;
   else
     motivo = `Você precisa tirar ${f(r.notaNecessaria)} de ${f(notaMaxima)} nas avaliações pendentes para chegar na média ${f(meta)}.`;
 

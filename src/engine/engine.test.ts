@@ -97,6 +97,7 @@ describe("Modo pontos", () => {
     expect(r.possivel).toBe(false);
     expect(r.classificacao).toBe("reagir");
     expect(r.mensagem).toBe(MENSAGENS.impossivelSemRecuperacao);
+    expect(r.motivo).toBe("Faltam 13 pontos para a meta, mas só 10 ainda estão disponíveis.");
   });
 
   it("9.4b — mesmo caso com recuperação → mensagem sobre recuperação", () => {

@@ -94,7 +94,7 @@ describe("Matérias com dados salvos", () => {
     // "Fecha e abre o navegador": desmonta e monta o app de novo.
     cleanup();
     render(<App />);
-    expect(screen.getByRole("heading", { name: "Quais são suas matérias?" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Fala! Bora ver como você tá? 👀" })).toBeTruthy();
     expect(screen.getByText("Matemática")).toBeTruthy();
   });
 
@@ -190,7 +190,7 @@ describe("Avaliações e resumo da matéria", () => {
     // Continua lá depois de fechar e abrir o app.
     cleanup();
     render(<App />);
-    fireEvent.click(within(screen.getByRole("list", { name: "Suas matérias" })).getByRole("button", { name: "Avaliações" }));
+    tocar("Ver minha situação");
     expect(screen.getByText("Nota 12 de 12")).toBeTruthy();
   });
 
@@ -274,5 +274,105 @@ describe("Avaliações e resumo da matéria", () => {
     tocar("Salvar e continuar");
     expect(screen.getByText(/Pra trocar o jeito de calcular, remova antes as avaliações cadastradas/)).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Sua escola" })).toBeTruthy();
+  });
+});
+
+describe("Dashboard e classificação", () => {
+  function configurarPontos() {
+    render(<App />);
+    tocar("Configurar manualmente");
+    preencherEscola("30", "18");
+    tocar("Salvar e continuar");
+  }
+
+  function cadastrar(materia: string, avaliacoes: [string, RegExp, string, string?, string?][]) {
+    tocar(/Matérias/);
+    tocar(`+ ${materia}`);
+    const card = screen.getByRole("heading", { name: materia }).closest("li")!;
+    fireEvent.click(within(card as HTMLElement).getByRole("button", { name: "Avaliações" }));
+    for (const [nome, situacao, maxima, nota, data] of avaliacoes) {
+      tocar("+ Nova avaliação");
+      digitar("Nome da avaliação", nome);
+      escolher(situacao);
+      digitar("Quanto vale (pontuação máxima)", maxima);
+      if (nota) digitar("Nota", nota);
+      if (data) digitar("Data (opcional)", data);
+      tocar("Salvar");
+    }
+  }
+
+  const contador = (rotulo: string) => screen.getByLabelText(new RegExp(`^${rotulo}:`)).textContent;
+
+  it("sem matérias mostra o estado vazio", () => {
+    configurarPontos();
+    tocar(/Painel/);
+    expect(screen.getByText("Adicione sua primeira matéria pra começar.")).toBeTruthy();
+  });
+
+  it("mostra os cards, os contadores e a próxima avaliação (casos 9.1 e 9.4)", () => {
+    configurarPontos();
+    cadastrar("Matemática", [
+      ["P1", /Concluída/, "12", "12"],
+      ["P2", /Pendente/, "18", undefined, "2026-04-02"],
+    ]);
+    cadastrar("Física", [
+      ["P1", /Concluída/, "10", "5"],
+      ["P2", /Pendente/, "10"],
+    ]);
+    cadastrar("Química", []);
+    tocar(/Painel/);
+
+    expect(screen.getByRole("heading", { name: "Fala! Bora ver como você tá? 👀" })).toBeTruthy();
+    expect(contador("Tá suave")).toBe("1");
+    expect(contador("Fica de olho")).toBe("0");
+    expect(contador("Precisa reagir")).toBe("1");
+
+    const lista = screen.getByRole("list", { name: "Situação das matérias" });
+    const card = (nome: string) => within(within(lista).getByRole("heading", { name: nome }).closest("li")!);
+
+    expect(card("Matemática").getByText("Você tem 12 de 18 pontos.")).toBeTruthy();
+    expect(card("Matemática").getByText("Faltam 6 pontos para sua meta.")).toBeTruthy();
+    expect(card("Matemática").getByText("Tá suave")).toBeTruthy();
+    expect(card("Matemática").getByText(/Próxima avaliação/).textContent).toContain("P2 · 02/04/2026");
+
+    expect(card("Física").getByText("Precisa reagir")).toBeTruthy();
+    expect(card("Química").getByText("Sem diagnóstico")).toBeTruthy();
+    expect(card("Química").getByText("Adicione suas avaliações para obter um diagnóstico melhor.")).toBeTruthy();
+  });
+
+  it("Ver minha situação abre o detalhe com a classificação e o porquê", () => {
+    configurarPontos();
+    cadastrar("Física", [
+      ["P1", /Concluída/, "10", "5"],
+      ["P2", /Pendente/, "10"],
+    ]);
+    tocar(/Painel/);
+    tocar("Ver minha situação");
+    expect(screen.getByRole("heading", { name: "Física" })).toBeTruthy();
+    expect(
+      screen.getByText("Com as avaliações cadastradas não dá pra chegar na meta. Confere se falta cadastrar alguma."),
+    ).toBeTruthy();
+    expect(screen.getByText("Por quê?").parentElement?.textContent).toContain(
+      "Faltam 13 pontos para a meta, mas só 10 ainda estão disponíveis.",
+    );
+  });
+
+  it("atualiza na hora depois de mudar uma nota", () => {
+    configurarPontos();
+    cadastrar("Matemática", [
+      ["P1", /Concluída/, "12", "12"],
+      ["P2", /Pendente/, "18"],
+    ]);
+    tocar(/Painel/);
+    expect(screen.getByText("Faltam 6 pontos para sua meta.")).toBeTruthy();
+
+    tocar("Ver minha situação");
+    fireEvent.click(screen.getAllByRole("button", { name: "Editar" })[1]);
+    escolher(/Concluída/);
+    digitar("Nota", "10");
+    tocar("Salvar");
+    tocar(/Painel/);
+    expect(screen.getByText("Meta atingida! Boa! 🎉")).toBeTruthy();
+    expect(contador("Tá suave")).toBe("1");
   });
 });
