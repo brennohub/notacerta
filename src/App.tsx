@@ -136,7 +136,7 @@ export default function App() {
         <div className="mx-auto flex w-full max-w-xl items-center px-4">
           <button
             type="button"
-            onClick={() => irPara("boasVindas")}
+            onClick={() => irPara(d.dados.config ? "dashboard" : "boasVindas")}
             className="min-h-12 text-lg font-bold text-destaque"
           >
             NotaCerta

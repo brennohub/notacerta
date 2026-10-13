@@ -26,4 +26,6 @@ body {
   min-height: 100dvh;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
+  /* Nomes compridos quebram a linha em vez de estourar a tela. */
+  overflow-wrap: anywhere;
 }

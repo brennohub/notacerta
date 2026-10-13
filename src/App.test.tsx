@@ -448,3 +448,23 @@ describe("Simulador", () => {
     ).toBeTruthy();
   });
 });
+
+describe("Revisão final", () => {
+  it("texto que não é número mostra mensagem clara", () => {
+    render(<App />);
+    tocar("Configurar manualmente");
+    preencherEscola("abc", "18");
+    tocar("Salvar e continuar");
+    expect(screen.getByText("Digite só números (ex.: 32,5).")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Sua escola" })).toBeTruthy();
+  });
+
+  it("com a escola configurada, o NotaCerta do topo leva ao Painel", () => {
+    render(<App />);
+    tocar("Configurar manualmente");
+    preencherEscola("30", "18");
+    tocar("Salvar e continuar");
+    tocar("NotaCerta");
+    expect(screen.getByRole("heading", { name: "Fala! Bora ver como você tá? 👀" })).toBeTruthy();
+  });
+});

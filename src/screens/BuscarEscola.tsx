@@ -24,6 +24,7 @@ export function BuscarEscola({ aoConfigurar }: Props) {
       >
         <Campo
           rotulo="Nome da escola"
+          maxLength={80}
           value={nome}
           onChange={(e) => {
             setNome(e.target.value);

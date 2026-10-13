@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Avaliacao, ConfigEscola, StatusAvaliacao, TipoAvaliacao } from "../types";
-import { formatarNumero, lerNumero, numeroParaCampo, type ResultadoValidacao } from "../engine";
+import { errosDeNumero, formatarNumero, lerNumero, numeroParaCampo, type ResultadoValidacao } from "../engine";
 import { Botao } from "./Botao";
 import { Campo } from "./Campo";
 import { Card } from "./Card";
@@ -53,7 +53,14 @@ export function FormAvaliacao({ config, materiaId, inicial, aoSalvar, aoCancelar
       peso: media ? (lerNumero(peso) ?? 0) : undefined,
       status,
     });
-    setErros(resultado.erros);
+    setErros({
+      ...resultado.erros,
+      ...errosDeNumero({
+        pontuacaoMaxima: media ? undefined : maxima,
+        nota: status === "concluida" ? nota : undefined,
+        peso: media ? peso : undefined,
+      }),
+    });
   }
 
   return (
@@ -62,6 +69,7 @@ export function FormAvaliacao({ config, materiaId, inicial, aoSalvar, aoCancelar
 
       <Campo
         rotulo="Nome da avaliação"
+        maxLength={40}
         placeholder="Ex.: Prova 1"
         value={nome}
         onChange={(e) => setNome(e.target.value)}

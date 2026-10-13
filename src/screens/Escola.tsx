@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ConfigEscola, ModoCalculo, TipoPeriodo } from "../types";
-import { lerNumero, numeroParaCampo, opcoesPeriodo, type ResultadoValidacao } from "../engine";
+import { errosDeNumero, lerNumero, numeroParaCampo, opcoesPeriodo, type ResultadoValidacao } from "../engine";
 import { Botao } from "../components/Botao";
 import { Campo } from "../components/Campo";
 import { Card } from "../components/Card";
@@ -68,7 +68,11 @@ export function Escola({ config, nomeSugerido, temMaterias, aoSalvar, aoSalvo, a
     };
 
     const resultado = aoSalvar(nova);
-    setErros(resultado.erros);
+    const numeros =
+      modo === "pontos"
+        ? errosDeNumero({ totalPeriodo: total, metaPeriodo: meta })
+        : errosDeNumero({ notaMaxima, mediaMeta });
+    setErros({ ...resultado.erros, ...numeros });
     if (resultado.valido) aoSalvo();
   }
 
@@ -82,6 +86,7 @@ export function Escola({ config, nomeSugerido, temMaterias, aoSalvar, aoSalvo, a
           rotulo="Nome da escola (opcional)"
           explicacao="Só pra você reconhecer. Não é obrigatório."
           value={nomeEscola}
+          maxLength={80}
           onChange={(e) => setNomeEscola(e.target.value)}
           autoComplete="off"
         />
