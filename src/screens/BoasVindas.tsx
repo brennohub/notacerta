@@ -1,12 +1,11 @@
 import { Botao } from "../components/Botao";
 
 interface Props {
-  // Ainda não existe catálogo de escolas (6.2), então os dois botões levam à configuração.
-  // A mensagem "Sua escola ainda não está cadastrada" entra na etapa 3.
-  aoComecar: () => void;
+  aoEncontrar: () => void;
+  aoConfigurar: () => void;
 }
 
-export function BoasVindas({ aoComecar }: Props) {
+export function BoasVindas({ aoEncontrar, aoConfigurar }: Props) {
   return (
     <section className="mx-auto flex min-h-dvh w-full max-w-xl flex-col justify-center gap-8 px-4 py-10">
       <div className="flex flex-col gap-3">
@@ -17,8 +16,8 @@ export function BoasVindas({ aoComecar }: Props) {
         </p>
       </div>
       <div className="flex flex-col gap-3">
-        <Botao onClick={aoComecar}>Encontrar minha escola</Botao>
-        <Botao variante="secundario" onClick={aoComecar}>
+        <Botao onClick={aoEncontrar}>Encontrar minha escola</Botao>
+        <Botao variante="secundario" onClick={aoConfigurar}>
           Configurar manualmente
         </Botao>
       </div>

@@ -1,4 +1,4 @@
-import type { Avaliacao, ConfigEscola, ModoCalculo } from "../types";
+import type { Avaliacao, ConfigEscola, Materia, ModoCalculo } from "../types";
 
 export interface ResultadoValidacao<Campo extends string> {
   valido: boolean;
@@ -39,6 +39,41 @@ export function validarConfig(config: ConfigEscola): ResultadoValidacao<CampoCon
     } else if (positivo(config.notaMaxima) && config.mediaMeta > config.notaMaxima) {
       erros.mediaMeta = "Sua meta passou da nota máxima. Confere os valores?";
     }
+  }
+
+  return resultado(erros);
+}
+
+type CampoMateria = "nome" | "meta" | "totalPontos";
+
+// "outras" são as demais matérias, para não deixar nome repetido.
+export function validarMateria(
+  materia: Materia,
+  config: ConfigEscola,
+  outras: Materia[],
+): ResultadoValidacao<CampoMateria> {
+  const erros: Partial<Record<CampoMateria, string>> = {};
+  const nome = materia.nome.trim().toLocaleLowerCase("pt-BR");
+
+  if (nome === "") {
+    erros.nome = "Dê um nome para a matéria.";
+  } else if (outras.some((o) => o.id !== materia.id && o.nome.trim().toLocaleLowerCase("pt-BR") === nome)) {
+    erros.nome = "Você já tem uma matéria com esse nome.";
+  }
+
+  if (config.modo === "pontos") {
+    if (!positivo(materia.totalPontos)) {
+      erros.totalPontos = "O total de pontos precisa ser maior que zero.";
+    }
+    if (!positivo(materia.meta)) {
+      erros.meta = "A meta precisa ser maior que zero.";
+    } else if (positivo(materia.totalPontos) && materia.meta > materia.totalPontos) {
+      erros.meta = "Sua meta passou do total de pontos possíveis. Confere os valores?";
+    }
+  } else if (!positivo(materia.meta)) {
+    erros.meta = "A média precisa ser maior que zero.";
+  } else if (positivo(config.notaMaxima) && materia.meta > config.notaMaxima) {
+    erros.meta = "Sua meta passou da nota máxima. Confere os valores?";
   }
 
   return resultado(erros);

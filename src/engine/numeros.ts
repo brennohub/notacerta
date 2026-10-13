@@ -11,3 +11,8 @@ export function lerNumero(texto: string): number | null {
 export function formatarNumero(numero: number): string {
   return numero.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 }
+
+// Número para mostrar dentro de um campo de texto: 32.5 → "32,5"; vazio → "".
+export function numeroParaCampo(numero: number | undefined | null): string {
+  return numero === undefined || numero === null ? "" : String(numero).replace(".", ",");
+}

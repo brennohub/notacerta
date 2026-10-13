@@ -1,36 +1,86 @@
-import { useState, type ComponentType } from "react";
+import { useState } from "react";
 import { abas, type NomeTela } from "./navegacao";
+import { useDados } from "./useDados";
+import { AvisoArmazenamento } from "./components/AvisoArmazenamento";
 import { BoasVindas } from "./screens/BoasVindas";
+import { BuscarEscola } from "./screens/BuscarEscola";
 import { Escola } from "./screens/Escola";
 import { Materias } from "./screens/Materias";
 import { Avaliacoes } from "./screens/Avaliacoes";
 import { Dashboard } from "./screens/Dashboard";
 import { Simulador } from "./screens/Simulador";
 
-const telas: Record<Exclude<NomeTela, "boasVindas">, ComponentType> = {
-  escola: Escola,
-  materias: Materias,
-  avaliacoes: Avaliacoes,
-  dashboard: Dashboard,
-  simulador: Simulador,
-};
-
 export default function App() {
-  const [tela, setTela] = useState<NomeTela>("boasVindas");
+  const d = useDados();
+  // Quem já configurou a escola volta direto para as matérias.
+  const [tela, setTela] = useState<NomeTela>(() => (d.dados.config ? "materias" : "boasVindas"));
+  const [nomeBuscado, setNomeBuscado] = useState("");
 
   function irPara(nova: NomeTela) {
     setTela(nova);
     window.scrollTo(0, 0);
   }
 
+  const aviso = d.erroArmazenamento && <AvisoArmazenamento mensagem={d.erroArmazenamento} />;
+
   if (tela === "boasVindas") {
-    return <BoasVindas aoComecar={() => irPara("escola")} />;
+    return (
+      <>
+        {aviso}
+        <BoasVindas aoEncontrar={() => irPara("buscarEscola")} aoConfigurar={() => irPara("escola")} />
+      </>
+    );
   }
 
-  const TelaAtual = telas[tela];
+  function conteudo() {
+    switch (tela) {
+      case "buscarEscola":
+        return (
+          <BuscarEscola
+            aoConfigurar={(nome) => {
+              setNomeBuscado(nome);
+              irPara("escola");
+            }}
+          />
+        );
+      case "escola":
+        return (
+          <Escola
+            config={d.dados.config}
+            nomeSugerido={nomeBuscado}
+            temMaterias={d.dados.materias.length > 0}
+            aoSalvar={d.salvarConfig}
+            aoSalvo={() => irPara("materias")}
+            aoApagarTudo={() => {
+              d.apagarTudo();
+              setNomeBuscado("");
+              irPara("boasVindas");
+            }}
+          />
+        );
+      case "materias":
+        return (
+          <Materias
+            config={d.dados.config}
+            materias={d.dados.materias}
+            aoAdicionar={d.adicionarMateria}
+            aoEditar={d.editarMateria}
+            aoRemover={d.removerMateria}
+            aoConfigurarEscola={() => irPara("escola")}
+          />
+        );
+      case "avaliacoes":
+        return <Avaliacoes />;
+      case "dashboard":
+        return <Dashboard />;
+      case "simulador":
+        return <Simulador />;
+    }
+  }
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {aviso}
       <header className="sticky top-0 z-10 border-b border-borda bg-fundo/95 backdrop-blur">
         <div className="mx-auto flex w-full max-w-xl items-center px-4">
           <button
@@ -44,7 +94,10 @@ export default function App() {
       </header>
 
       <main className="flex-1 pb-24">
-        <TelaAtual />
+        {conteudo()}
+        <p className="px-4 pb-4 text-center text-sm text-texto-secundario">
+          🔒 Seus dados ficam salvos só neste aparelho.
+        </p>
       </main>
 
       <nav
