@@ -12,8 +12,8 @@ import { Simulador } from "./screens/Simulador";
 
 export default function App() {
   const d = useDados();
-  // Quem já configurou a escola volta direto para as matérias.
-  const [tela, setTela] = useState<NomeTela>(() => (d.dados.config ? "materias" : "boasVindas"));
+  // Quem já configurou a escola volta direto para o Painel.
+  const [tela, setTela] = useState<NomeTela>(() => (d.dados.config ? "dashboard" : "boasVindas"));
   const [nomeBuscado, setNomeBuscado] = useState("");
   const [materiaAberta, setMateriaAberta] = useState<string | null>(null);
 
@@ -93,7 +93,19 @@ export default function App() {
           />
         );
       case "dashboard":
-        return <Dashboard />;
+        return (
+          <Dashboard
+            config={d.dados.config}
+            materias={d.dados.materias}
+            avaliacoes={d.dados.avaliacoes}
+            aoVerMateria={(id) => {
+              setMateriaAberta(id);
+              irPara("avaliacoes");
+            }}
+            aoIrParaEscola={() => irPara("escola")}
+            aoIrParaMaterias={() => irPara("materias")}
+          />
+        );
       case "simulador":
         return <Simulador />;
     }

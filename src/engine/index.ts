@@ -8,3 +8,4 @@ export * from "./periodos";
 export * from "./materias";
 export * from "./datas";
 export * from "./avaliacoes";
+export * from "./dashboard";

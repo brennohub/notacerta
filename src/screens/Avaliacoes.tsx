@@ -6,6 +6,7 @@ import {
   formatarData,
   formatarNumero as f,
   progressoAteMeta,
+  textosMateria,
   type AnaliseMateria,
   type ResultadoValidacao,
 } from "../engine";
@@ -14,6 +15,7 @@ import { Botao } from "../components/Botao";
 import { Card } from "../components/Card";
 import { Confirmacao } from "../components/Confirmacao";
 import { FormAvaliacao, ROTULO_TIPO } from "../components/FormAvaliacao";
+import { Selo } from "../components/Selo";
 import { Tela } from "../components/Tela";
 
 interface Props {
@@ -195,10 +197,10 @@ function Numero({ rotulo, valor }: { rotulo: string; valor: string }) {
   );
 }
 
-// Resumo no topo da matéria (6.5).
+// Resumo no topo da matéria (6.5) com a classificação e o porquê (7.4).
 function Resumo({ analise }: { analise: AnaliseMateria }) {
-  let texto: string;
-  let numeros: [string, string][];
+  const textos = textosMateria(analise);
+  let numeros: [string, string][] = [];
 
   if (analise.modo === "pontos") {
     numeros = [
@@ -207,7 +209,6 @@ function Resumo({ analise }: { analise: AnaliseMateria }) {
       ["Meta", f(analise.meta)],
       ["Falta", f(analise.falta)],
     ];
-    texto = `Você tem ${f(analise.obtidos)} de ${f(analise.meta)} pontos.`;
   } else {
     let precisa: string;
     if (analise.notaNecessaria === null) precisa = "Sem pendentes";
@@ -219,23 +220,31 @@ function Resumo({ analise }: { analise: AnaliseMateria }) {
       ["Média necessária", f(analise.meta)],
       ["Precisa tirar nas pendentes", precisa],
     ];
-    texto =
-      analise.notaNecessaria !== null && !analise.alcancavel
-        ? `A nota necessária passa da nota máxima (${f(analise.notaMaxima)}).`
-        : analise.mediaAtual === null
-          ? "Você ainda não tem notas nessa matéria."
-          : `Sua média atual é ${f(analise.mediaAtual)} e sua meta é ${f(analise.meta)}.`;
   }
 
   return (
-    <Card className="flex flex-col gap-4">
-      <p>{texto}</p>
-      <BarraProgresso progresso={progressoAteMeta(analise)} rotulo="Progresso até a meta" />
-      <div className={`grid gap-2 ${numeros.length === 4 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
-        {numeros.map(([rotulo, valor]) => (
-          <Numero key={rotulo} rotulo={rotulo} valor={valor} />
-        ))}
-      </div>
-    </Card>
+    <>
+      <Card className="flex flex-col gap-3">
+        <div>
+          <Selo classificacao={analise.classificacao} />
+        </div>
+        <p className="font-semibold">{analise.mensagem}</p>
+        <p className="text-sm text-texto-secundario">
+          <span className="font-semibold text-texto">Por quê? </span>
+          {analise.motivo}
+        </p>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <p>{textos.situacao}</p>
+        <BarraProgresso progresso={progressoAteMeta(analise)} rotulo="Progresso até a meta" />
+        {textos.falta && <p className="text-texto-secundario">{textos.falta}</p>}
+        <div className={`grid gap-2 ${numeros.length === 4 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+          {numeros.map(([rotulo, valor]) => (
+            <Numero key={rotulo} rotulo={rotulo} valor={valor} />
+          ))}
+        </div>
+      </Card>
+    </>
   );
 }
