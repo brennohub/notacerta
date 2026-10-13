@@ -90,6 +90,7 @@ export default function App() {
             aoRemover={d.removerAvaliacao}
             aoIrParaEscola={() => irPara("escola")}
             aoIrParaMaterias={() => irPara("materias")}
+            aoSimular={() => irPara("simulador")}
           />
         );
       case "dashboard":
@@ -107,7 +108,24 @@ export default function App() {
           />
         );
       case "simulador":
-        return <Simulador />;
+        return (
+          <Simulador
+            config={d.dados.config}
+            materias={d.dados.materias}
+            avaliacoes={d.dados.avaliacoes}
+            materiaId={materiaAberta}
+            aoAbrirMateria={(id) => {
+              setMateriaAberta(id);
+              window.scrollTo(0, 0);
+            }}
+            aoIrParaAvaliacoes={(id) => {
+              setMateriaAberta(id);
+              irPara("avaliacoes");
+            }}
+            aoIrParaEscola={() => irPara("escola")}
+            aoIrParaMaterias={() => irPara("materias")}
+          />
+        );
     }
   }
 

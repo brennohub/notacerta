@@ -376,3 +376,75 @@ describe("Dashboard e classificação", () => {
     expect(contador("Tá suave")).toBe("1");
   });
 });
+
+describe("Simulador", () => {
+  function configurarComAvaliacoes() {
+    render(<App />);
+    tocar("Configurar manualmente");
+    preencherEscola("30", "18");
+    tocar("Salvar e continuar");
+    tocar("+ Matemática");
+    fireEvent.click(within(screen.getByRole("list", { name: "Suas matérias" })).getByRole("button", { name: "Avaliações" }));
+    for (const [nome, situacao, maxima, nota] of [
+      ["P1", /Concluída/, "12", "12"],
+      ["P2", /Pendente/, "18", ""],
+    ] as const) {
+      tocar("+ Nova avaliação");
+      digitar("Nome da avaliação", nome);
+      escolher(situacao);
+      digitar("Quanto vale (pontuação máxima)", maxima);
+      if (nota) digitar("Nota", nota);
+      tocar("Salvar");
+    }
+  }
+
+  const resultado = (cenario: string) =>
+    within(within(screen.getByRole("list", { name: "Resultados da simulação" })).getByRole("heading", { name: cenario }).closest("li")!);
+
+  it("três cenários recalculam na hora e não alteram os dados salvos (9.16)", () => {
+    configurarComAvaliacoes();
+    const salvoAntes = localStorage.getItem("notacerta:dados");
+
+    tocar("🔮 Simular notas");
+    expect(screen.getByRole("heading", { name: "E se eu tirar...?" })).toBeTruthy();
+    expect(screen.getByText("Isso é uma simulação com os valores que você digitou, não uma garantia.")).toBeTruthy();
+
+    digitar("Conservador: nota em P2", "5");
+    digitar("Provável: nota em P2", "10");
+    digitar("Melhor resultado: nota em P2", "18");
+
+    expect(resultado("Conservador").getByText("17 pontos")).toBeTruthy();
+    expect(resultado("Conservador").getByText("Falta 1 ponto")).toBeTruthy();
+    expect(resultado("Conservador").getByText("Com essas notas não dá pra chegar na meta")).toBeTruthy();
+    expect(resultado("Provável").getByText("22 pontos")).toBeTruthy();
+    expect(resultado("Provável").getByText("Meta atingida! Boa! 🎉")).toBeTruthy();
+    expect(resultado("Melhor resultado").getByText("30 pontos")).toBeTruthy();
+
+    // Nada foi salvo: o aparelho continua com os mesmos dados e a avaliação segue pendente.
+    expect(localStorage.getItem("notacerta:dados")).toBe(salvoAntes);
+    tocar(/Avaliações/);
+    expect(screen.getByText("Pendente · vale 18")).toBeTruthy();
+  });
+
+  it("nota acima do máximo mostra erro e fica fora da conta", () => {
+    configurarComAvaliacoes();
+    tocar("🔮 Simular notas");
+    digitar("Provável: nota em P2", "20");
+    expect(screen.getByText("De 0 a 18")).toBeTruthy();
+    expect(resultado("Provável").getByText("12 pontos")).toBeTruthy();
+    expect(resultado("Provável").getByText("Nas que ficaram em branco: precisa de 6 dos 18 pontos")).toBeTruthy();
+  });
+
+  it("matéria sem pendentes avisa que não há o que simular", () => {
+    render(<App />);
+    tocar("Configurar manualmente");
+    preencherEscola("30", "18");
+    tocar("Salvar e continuar");
+    tocar("+ Física");
+    tocar(/Simular/);
+    tocar("Física");
+    expect(
+      screen.getByText("Essa matéria não tem avaliações pendentes pra simular. Cadastre uma avaliação pendente primeiro."),
+    ).toBeTruthy();
+  });
+});
