@@ -144,3 +144,135 @@ describe("Matérias com dados salvos", () => {
     expect(localStorage.getItem("notacerta:dados")).toBeNull();
   });
 });
+
+describe("Avaliações e resumo da matéria", () => {
+  function abrirMateria(nome: string) {
+    tocar(`+ ${nome}`);
+    const lista = screen.getByRole("list", { name: "Suas matérias" });
+    fireEvent.click(within(lista).getByRole("button", { name: "Avaliações" }));
+    expect(screen.getByRole("heading", { name: nome })).toBeTruthy();
+  }
+
+  function novaAvaliacao(nome: string, situacao: RegExp, campos: Record<string, string>) {
+    tocar("+ Nova avaliação");
+    digitar("Nome da avaliação", nome);
+    escolher(situacao);
+    for (const [rotulo, valor] of Object.entries(campos)) digitar(rotulo, valor);
+    tocar("Salvar");
+  }
+
+  function numeroDoResumo(rotulo: string) {
+    return screen.getByText(rotulo).nextSibling?.textContent;
+  }
+
+  function configurarPontos() {
+    render(<App />);
+    tocar("Configurar manualmente");
+    preencherEscola("30", "18");
+    tocar("Salvar e continuar");
+  }
+
+  it("modo pontos: cadastra concluída e pendente e mostra o resumo (caso 9.1)", () => {
+    configurarPontos();
+    abrirMateria("Matemática");
+    expect(screen.getByText("Adicione sua primeira avaliação dessa matéria.")).toBeTruthy();
+
+    novaAvaliacao("P1", /Concluída/, { "Quanto vale (pontuação máxima)": "12", Nota: "12" });
+    novaAvaliacao("P2", /Pendente/, { "Quanto vale (pontuação máxima)": "18" });
+
+    expect(numeroDoResumo("Pontos conquistados")).toBe("12");
+    expect(numeroDoResumo("Ainda disponíveis")).toBe("18");
+    expect(numeroDoResumo("Meta")).toBe("18");
+    expect(numeroDoResumo("Falta")).toBe("6");
+    expect(screen.getByText("Nota 12 de 12")).toBeTruthy();
+    expect(screen.getByText("Pendente · vale 18")).toBeTruthy();
+
+    // Continua lá depois de fechar e abrir o app.
+    cleanup();
+    render(<App />);
+    fireEvent.click(within(screen.getByRole("list", { name: "Suas matérias" })).getByRole("button", { name: "Avaliações" }));
+    expect(screen.getByText("Nota 12 de 12")).toBeTruthy();
+  });
+
+  it("nota fica desabilitada quando a avaliação está pendente", () => {
+    configurarPontos();
+    abrirMateria("Física");
+    tocar("+ Nova avaliação");
+    escolher(/Pendente/);
+    expect((screen.getByLabelText("Nota") as HTMLInputElement).disabled).toBe(true);
+    escolher(/Concluída/);
+    expect((screen.getByLabelText("Nota") as HTMLInputElement).disabled).toBe(false);
+  });
+
+  it("bloqueia nota acima do máximo e concluída sem nota", () => {
+    configurarPontos();
+    abrirMateria("Química");
+    novaAvaliacao("P1", /Concluída/, { "Quanto vale (pontuação máxima)": "10", Nota: "11" });
+    expect(screen.getByText("A nota passou da pontuação máxima da avaliação.")).toBeTruthy();
+    digitar("Nota", "");
+    tocar("Salvar");
+    expect(screen.getByText("Avaliação concluída precisa de nota.")).toBeTruthy();
+    digitar("Nota", "9,5");
+    tocar("Salvar");
+    expect(screen.getByText("Nota 9,5 de 10")).toBeTruthy();
+  });
+
+  it("editar atualiza o resumo e remover pede confirmação", () => {
+    configurarPontos();
+    abrirMateria("Biologia");
+    novaAvaliacao("P1", /Pendente/, { "Quanto vale (pontuação máxima)": "10" });
+    tocar("Editar");
+    escolher(/Concluída/);
+    digitar("Nota", "7");
+    tocar("Salvar");
+    expect(numeroDoResumo("Pontos conquistados")).toBe("7");
+
+    tocar("Remover");
+    expect(within(screen.getByRole("dialog")).getByText("Remover P1?")).toBeTruthy();
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Remover" }));
+    expect(screen.getByText("Adicione sua primeira avaliação dessa matéria.")).toBeTruthy();
+  });
+
+  it("soma das avaliações acima do total avisa sem bloquear", () => {
+    configurarPontos();
+    abrirMateria("História");
+    novaAvaliacao("P1", /Concluída/, { "Quanto vale (pontuação máxima)": "20", Nota: "15" });
+    novaAvaliacao("P2", /Pendente/, { "Quanto vale (pontuação máxima)": "15" });
+    expect(screen.getByText("A soma das avaliações passou do total da matéria. Confere se digitou certo.")).toBeTruthy();
+    expect(screen.getByText("Pendente · vale 15")).toBeTruthy();
+  });
+
+  it("modo média: mostra média atual e a nota necessária (caso 9.11)", () => {
+    render(<App />);
+    tocar("Configurar manualmente");
+    escolher("2º ano");
+    escolher("Bimestre");
+    escolher(/Fazendo média/);
+    digitar("Qual a nota máxima?", "10");
+    digitar("Qual a média que você precisa?", "6");
+    escolher("Não");
+    tocar("Salvar e continuar");
+    abrirMateria("Inglês");
+
+    novaAvaliacao("P1", /Concluída/, { Nota: "5", Peso: "2" });
+    novaAvaliacao("P2", /Pendente/, { Peso: "3" });
+
+    expect(numeroDoResumo("Média atual")).toBe("5");
+    expect(numeroDoResumo("Média necessária")).toBe("6");
+    expect(numeroDoResumo("Precisa tirar nas pendentes")).toBe("6,67");
+    expect(screen.getByText("Nota 5 de 10")).toBeTruthy();
+  });
+
+  it("não deixa trocar o modo da escola com avaliações cadastradas", () => {
+    configurarPontos();
+    abrirMateria("Geografia");
+    novaAvaliacao("P1", /Concluída/, { "Quanto vale (pontuação máxima)": "10", Nota: "8" });
+    tocar(/Escola/);
+    escolher(/Fazendo média/);
+    digitar("Qual a nota máxima?", "10");
+    digitar("Qual a média que você precisa?", "6");
+    tocar("Salvar e continuar");
+    expect(screen.getByText(/Pra trocar o jeito de calcular, remova antes as avaliações cadastradas/)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Sua escola" })).toBeTruthy();
+  });
+});
