@@ -6,6 +6,7 @@ import {
   avisoSomaAvaliacoes,
   calcularPontos,
   lerNumero,
+  naoENumero,
   simular,
   validarAvaliacao,
   validarConfig,
@@ -219,6 +220,9 @@ describe("Geral", () => {
     expect(lerNumero("0")).toBe(0);
     expect(lerNumero("")).toBeNull();
     expect(lerNumero("abc")).toBeNull();
+    expect(naoENumero("abc")).toBe(true);
+    expect(naoENumero("")).toBe(false);
+    expect(naoENumero("32,5")).toBe(false);
   });
 
   it("9.16 — simulador não altera os dados salvos", () => {

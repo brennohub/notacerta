@@ -16,3 +16,20 @@ export function formatarNumero(numero: number): string {
 export function numeroParaCampo(numero: number | undefined | null): string {
   return numero === undefined || numero === null ? "" : String(numero).replace(".", ",");
 }
+
+export const ERRO_NAO_NUMERO = "Digite só números (ex.: 32,5).";
+
+// Campo preenchido com algo que não é número (ex.: "abc").
+export function naoENumero(texto: string): boolean {
+  return texto.trim() !== "" && lerNumero(texto) === null;
+}
+
+// Recebe { campo: textoDigitado } e devolve erro só nos campos que não são número.
+export function errosDeNumero<Campo extends string>(campos: Partial<Record<Campo, string>>): Partial<Record<Campo, string>> {
+  const erros: Partial<Record<Campo, string>> = {};
+  for (const campo in campos) {
+    const texto = campos[campo];
+    if (texto !== undefined && naoENumero(texto)) erros[campo] = ERRO_NAO_NUMERO;
+  }
+  return erros;
+}

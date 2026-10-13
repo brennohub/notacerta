@@ -22,14 +22,47 @@ const ERRO_LER = "Não conseguimos ler os dados salvos neste aparelho. O app com
 const ERRO_SALVAR =
   "Não conseguimos salvar neste aparelho. Suas mudanças podem se perder ao fechar o navegador.";
 
-function formatoValido(valor: unknown): valor is DadosApp {
-  if (typeof valor !== "object" || valor === null) return false;
-  const d = valor as Record<string, unknown>;
+const ehTexto = (v: unknown): v is string => typeof v === "string";
+const ehNumero = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
+const ehObjeto = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+
+function configValida(c: unknown): boolean {
   return (
-    d.schemaVersion === SCHEMA_VERSION &&
-    (d.config === null || typeof d.config === "object") &&
-    Array.isArray(d.materias) &&
-    Array.isArray(d.avaliacoes)
+    ehObjeto(c) &&
+    ehTexto(c.serie) &&
+    ehTexto(c.periodoAtual) &&
+    ["bimestre", "trimestre", "semestre"].includes(c.tipoPeriodo as string) &&
+    (c.modo === "pontos" || c.modo === "media") &&
+    typeof c.temRecuperacao === "boolean"
+  );
+}
+
+function materiaValida(m: unknown): boolean {
+  return ehObjeto(m) && ehTexto(m.id) && ehTexto(m.nome) && ehTexto(m.periodoId) && ehNumero(m.meta);
+}
+
+function avaliacaoValida(a: unknown): boolean {
+  return (
+    ehObjeto(a) &&
+    ehTexto(a.id) &&
+    ehTexto(a.materiaId) &&
+    ehTexto(a.nome) &&
+    ehNumero(a.pontuacaoMaxima) &&
+    (a.nota === null || ehNumero(a.nota)) &&
+    ["concluida", "pendente", "nao_realizada"].includes(a.status as string)
+  );
+}
+
+// Confere o formato de tudo que foi lido, item por item, para nenhum dado estranho quebrar as telas.
+function formatoValido(valor: unknown): valor is DadosApp {
+  if (!ehObjeto(valor)) return false;
+  return (
+    valor.schemaVersion === SCHEMA_VERSION &&
+    (valor.config === null || configValida(valor.config)) &&
+    Array.isArray(valor.materias) &&
+    valor.materias.every(materiaValida) &&
+    Array.isArray(valor.avaliacoes) &&
+    valor.avaliacoes.every(avaliacaoValida)
   );
 }
 

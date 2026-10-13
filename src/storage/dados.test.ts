@@ -42,6 +42,21 @@ describe("Persistência no aparelho", () => {
     expect(carregarDados().erro).toBeDefined();
   });
 
+  it("item corrompido por dentro (matéria sem nome, status inválido) volta para vazio com aviso", () => {
+    const semNome = { ...exemplo, materias: [{ id: "m1", periodoId: "p", meta: 18 }] };
+    localStorage.setItem("notacerta:dados", JSON.stringify(semNome));
+    expect(carregarDados().erro).toBeDefined();
+
+    const statusRuim = {
+      ...exemplo,
+      avaliacoes: [{ id: "a", materiaId: "m1", nome: "P1", pontuacaoMaxima: 10, nota: null, status: "talvez" }],
+    };
+    localStorage.setItem("notacerta:dados", JSON.stringify(statusRuim));
+    const r = carregarDados();
+    expect(r.dados).toEqual(DADOS_VAZIOS);
+    expect(r.erro).toBeDefined();
+  });
+
   it("se o localStorage falhar ao salvar, devolve mensagem em vez de quebrar", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new Error("cheio");

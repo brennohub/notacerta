@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ConfigEscola, Materia } from "../types";
-import { formatarNumero, lerNumero, numeroParaCampo, type ResultadoValidacao } from "../engine";
+import { errosDeNumero, formatarNumero, lerNumero, numeroParaCampo, type ResultadoValidacao } from "../engine";
 import { Botao } from "../components/Botao";
 import { Campo } from "../components/Campo";
 import { Card } from "../components/Card";
@@ -94,6 +94,7 @@ export function Materias({
       >
         <Campo
           rotulo="Outra matéria"
+          maxLength={40}
           placeholder="Ex.: Artes"
           value={nomeLivre}
           onChange={(e) => {
@@ -187,7 +188,7 @@ function EditarMateria({ materia, config, aoSalvar, aoCancelar }: EditarProps) {
 
   return (
     <Card className="flex flex-col gap-4 border border-destaque">
-      <Campo rotulo="Nome da matéria" value={nome} onChange={(e) => setNome(e.target.value)} erro={erros.nome} />
+      <Campo rotulo="Nome da matéria" maxLength={40} value={nome} onChange={(e) => setNome(e.target.value)} erro={erros.nome} />
       {pontos && (
         <Campo
           rotulo="Total de pontos da matéria"
@@ -218,7 +219,7 @@ function EditarMateria({ materia, config, aoSalvar, aoCancelar }: EditarProps) {
               meta: lerNumero(meta) ?? 0,
               totalPontos: pontos ? (lerNumero(total) ?? 0) : undefined,
             });
-            setErros(r.erros);
+            setErros({ ...r.erros, ...errosDeNumero({ meta, totalPontos: pontos ? total : undefined }) });
           }}
         >
           Salvar
