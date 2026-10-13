@@ -17,6 +17,7 @@ interface Props {
   aoEditar: (materia: Materia) => ErrosMateria;
   aoRemover: (id: string) => void;
   aoConfigurarEscola: () => void;
+  aoAbrirAvaliacoes: (id: string) => void;
 }
 
 const SUGESTOES = [
@@ -36,7 +37,15 @@ const SUGESTOES = [
 const mesmoNome = (a: string, b: string) => a.trim().toLocaleLowerCase("pt-BR") === b.trim().toLocaleLowerCase("pt-BR");
 
 // 6.4 — "Quais são suas matérias?"
-export function Materias({ config, materias, aoAdicionar, aoEditar, aoRemover, aoConfigurarEscola }: Props) {
+export function Materias({
+  config,
+  materias,
+  aoAdicionar,
+  aoEditar,
+  aoRemover,
+  aoConfigurarEscola,
+  aoAbrirAvaliacoes,
+}: Props) {
   const [nomeLivre, setNomeLivre] = useState("");
   const [erroNovo, setErroNovo] = useState<string | undefined>();
   const [editandoId, setEditandoId] = useState<string | null>(null);
@@ -124,6 +133,7 @@ export function Materias({ config, materias, aoAdicionar, aoEditar, aoRemover, a
                     <h2 className="text-lg font-bold">{materia.nome}</h2>
                     <p className="text-sm text-texto-secundario">{descreverMeta(materia, config)}</p>
                   </div>
+                  <Botao onClick={() => aoAbrirAvaliacoes(materia.id)}>Avaliações</Botao>
                   <div className="grid grid-cols-2 gap-2">
                     <Botao variante="secundario" onClick={() => setEditandoId(materia.id)}>
                       Editar

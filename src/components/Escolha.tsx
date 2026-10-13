@@ -18,11 +18,13 @@ export function Escolha<T extends string>({ rotulo, explicacao, opcoes, valor, a
   const temDescricao = opcoes.some((o) => o.descricao);
   const colunas = temDescricao
     ? "grid-cols-1 sm:grid-cols-2"
-    : opcoes.length === 4
-      ? "grid-cols-2 sm:grid-cols-4"
-      : opcoes.length === 3
-        ? "grid-cols-3"
-        : "grid-cols-2";
+    : opcoes.length >= 5
+      ? "grid-cols-2 sm:grid-cols-3"
+      : opcoes.length === 4
+        ? "grid-cols-2 sm:grid-cols-4"
+        : opcoes.length === 3
+          ? "grid-cols-3"
+          : "grid-cols-2";
 
   return (
     <fieldset className="flex flex-col gap-1.5">

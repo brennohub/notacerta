@@ -15,6 +15,7 @@ export default function App() {
   // Quem já configurou a escola volta direto para as matérias.
   const [tela, setTela] = useState<NomeTela>(() => (d.dados.config ? "materias" : "boasVindas"));
   const [nomeBuscado, setNomeBuscado] = useState("");
+  const [materiaAberta, setMateriaAberta] = useState<string | null>(null);
 
   function irPara(nova: NomeTela) {
     setTela(nova);
@@ -67,10 +68,30 @@ export default function App() {
             aoEditar={d.editarMateria}
             aoRemover={d.removerMateria}
             aoConfigurarEscola={() => irPara("escola")}
+            aoAbrirAvaliacoes={(id) => {
+              setMateriaAberta(id);
+              irPara("avaliacoes");
+            }}
           />
         );
       case "avaliacoes":
-        return <Avaliacoes />;
+        return (
+          <Avaliacoes
+            config={d.dados.config}
+            materias={d.dados.materias}
+            avaliacoes={d.dados.avaliacoes}
+            materiaId={materiaAberta}
+            aoAbrirMateria={(id) => {
+              setMateriaAberta(id);
+              window.scrollTo(0, 0);
+            }}
+            aoAdicionar={d.adicionarAvaliacao}
+            aoEditar={d.editarAvaliacao}
+            aoRemover={d.removerAvaliacao}
+            aoIrParaEscola={() => irPara("escola")}
+            aoIrParaMaterias={() => irPara("materias")}
+          />
+        );
       case "dashboard":
         return <Dashboard />;
       case "simulador":

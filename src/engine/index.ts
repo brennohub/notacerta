@@ -6,3 +6,5 @@ export * from "./classificacao";
 export * from "./simulador";
 export * from "./periodos";
 export * from "./materias";
+export * from "./datas";
+export * from "./avaliacoes";

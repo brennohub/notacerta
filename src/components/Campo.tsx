@@ -17,7 +17,7 @@ export function Campo({ rotulo, explicacao, erro, className = "", ...props }: Ca
       <input
         id={id}
         aria-invalid={erro ? true : undefined}
-        className={`min-h-12 w-full rounded-xl border bg-fundo px-4 text-base text-texto outline-none focus:border-destaque ${
+        className={`min-h-12 w-full rounded-xl border bg-fundo px-4 text-base text-texto outline-none focus:border-destaque disabled:opacity-50 ${
           erro ? "border-reagir" : "border-borda"
         } ${className}`}
         {...props}

@@ -95,3 +95,10 @@ export function analisarMateria(materia: Materia, avaliacoes: Avaliacao[], confi
 
   return { ...diagnostico, motivo, modo: "media", meta, notaMaxima, ...r };
 }
+
+// Quanto do caminho até a meta já foi feito, de 0 a 1 (para a barra de progresso).
+export function progressoAteMeta(analise: AnaliseMateria): number {
+  if (analise.meta <= 0) return 0;
+  const atual = analise.modo === "pontos" ? analise.obtidos : (analise.mediaAtual ?? 0);
+  return Math.min(1, Math.max(0, atual / analise.meta));
+}

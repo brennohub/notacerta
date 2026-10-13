@@ -81,7 +81,12 @@ export function validarMateria(
 
 type CampoAvaliacao = "nome" | "pontuacaoMaxima" | "nota" | "peso";
 
-export function validarAvaliacao(avaliacao: Avaliacao, modo: ModoCalculo): ResultadoValidacao<CampoAvaliacao> {
+// No modo média, informe a notaMaxima da escola: todas as avaliações usam essa mesma escala (7.2).
+export function validarAvaliacao(
+  avaliacao: Avaliacao,
+  modo: ModoCalculo,
+  notaMaxima?: number,
+): ResultadoValidacao<CampoAvaliacao> {
   const erros: Partial<Record<CampoAvaliacao, string>> = {};
   const { nota, pontuacaoMaxima, status } = avaliacao;
 
@@ -89,6 +94,8 @@ export function validarAvaliacao(avaliacao: Avaliacao, modo: ModoCalculo): Resul
 
   if (!positivo(pontuacaoMaxima)) {
     erros.pontuacaoMaxima = "A pontuação máxima precisa ser maior que zero.";
+  } else if (modo === "media" && notaMaxima !== undefined && pontuacaoMaxima !== notaMaxima) {
+    erros.pontuacaoMaxima = "No modo média, todas as notas usam a nota máxima da escola.";
   }
 
   if (status === "concluida" && nota === null) {
